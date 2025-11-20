@@ -9,19 +9,16 @@
 </head>
 <body>
 	<%
-	//db, api 아이디저장
 	String clientId = "zFWHGw63zV5E5AUyx1Ht";
 	String clientSecret = "xKgyjz23_I";
 	String dbURL = "jdbc:mysql://localhost:3306/naverwep?serverTimezone=UTC";
     String dbID = "root";
     String dbPW = "1234";
 	
-    //api호출 컨트롤
     String category1 = "인천"; 
 	String category2 = "한식";
 	String query = category1  + category2;
 	String encodedQuery = "";
-	
 	try {
 		encodedQuery = URLEncoder.encode(query, "UTF-8");
 	} catch (UnsupportedEncodingException e) {
@@ -31,6 +28,7 @@
 			+ "&display=10&start=1&sort=random";
 	HttpURLConnection con = null;
 	StringBuilder responseBody = new StringBuilder();
+
 	try {
 		URL url = new URL(apiURL);
 		con = (HttpURLConnection) url.openConnection();
@@ -55,7 +53,6 @@
 			con.disconnect();
 	}
 
-	//xml형태 api호출값을 파싱해서 각각의 값으로 변환
 	javax.xml.parsers.DocumentBuilderFactory factory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
     javax.xml.parsers.DocumentBuilder builder = factory.newDocumentBuilder();
     ByteArrayInputStream xmlStream = new ByteArrayInputStream(responseBody.toString().getBytes("UTF-8"));
@@ -65,7 +62,7 @@
 
     Class.forName("com.mysql.cj.jdbc.Driver");
     Connection conn = DriverManager.getConnection(dbURL, dbID, dbPW);
-	
+
     String sql = "INSERT INTO companies "
                 + "(name, category, address, street_address, description, mapx, mapy, url) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
