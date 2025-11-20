@@ -1,0 +1,31 @@
+create table users(
+id int primary key auto_increment,
+username varchar(20) not null,
+password varchar(50) not null,
+email varchar(200),
+join_date  DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+create table companies(
+id int primary key auto_increment,
+name varchar(100) not null,
+category varchar(50),
+address varchar(200),
+street_address varchar(200),
+description text,
+mapx decimal(12,8),
+mapy decimal(12,8),
+url varchar(255)
+);
+
+create table reviews(
+id int primary key auto_increment,
+company_id int not null,
+user_id int not null,
+rating int check(rating between 1 and 5),
+comment text,
+create_at datetime default current_timestamp,
+
+foreign key(company_id) references companies(id) on delete cascade,
+foreign key(user_id) references users(id) on delete cascade
+);

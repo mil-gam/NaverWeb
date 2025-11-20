@@ -1,0 +1,63 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8" import="java.io.*, java.net.*, java.util.*"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+	<%
+	// 1. 네이버 API 인증 정보
+	String clientId = "zFWHGw63zV5E5AUyx1Ht"; // 발급받은 클라이언트 ID
+	String clientSecret = "xKgyjz23_I"; // 발급받은 클라이언트 시크릿
+
+	// 2. 검색 키워드
+	String location = "인천";
+	String category = "한식";
+	String query = location + " " + category;
+	String encodedQuery = "";
+	try {
+		encodedQuery = URLEncoder.encode(query, "UTF-8");
+	} catch (UnsupportedEncodingException e) {
+		out.println("검색어 인코딩 실패: " + e.getMessage());
+	}
+
+	// 3. API URL (XML 결과)
+	String apiURL = "https://openapi.naver.com/v1/search/local.xml?query=" + encodedQuery
+			+ "&display=10&start=1&sort=random";
+
+	// 4. HTTP 요청
+	HttpURLConnection con = null;
+	StringBuilder responseBody = new StringBuilder();
+
+	try {
+		URL url = new URL(apiURL);
+		con = (HttpURLConnection) url.openConnection();
+		con.setRequestMethod("GET");
+		con.setRequestProperty("X-Naver-Client-Id", clientId);
+		con.setRequestProperty("X-Naver-Client-Secret", clientSecret);
+
+		int responseCode = con.getResponseCode();
+		InputStream is = (responseCode == 200) ? con.getInputStream() : con.getErrorStream();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+		String line;
+		while ((line = reader.readLine()) != null) {
+			responseBody.append(line).append("\n");
+		}
+		reader.close();
+	} catch (Exception e) {
+	    out.println("오류 발생: " + e.getMessage());
+	    e.printStackTrace(new java.io.PrintWriter(out));
+	} finally {
+		if (con != null)
+			con.disconnect();
+	}
+
+	// 5. 결과 출력
+	out.println("<pre>");
+	out.println(responseBody.toString());
+	out.println("</pre>");
+	%>
+</body>
+</html>

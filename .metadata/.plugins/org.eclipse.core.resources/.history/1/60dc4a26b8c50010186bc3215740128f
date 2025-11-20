@@ -1,0 +1,104 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8" import="java.io.*, java.net.*, java.util.*"
+	import="java.sql.*"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+	<%
+	String clientId = "zFWHGw63zV5E5AUyx1Ht";
+	String clientSecret = "xKgyjz23_I";
+	String dbURL = "jdbc:mysql://localhost:3306/naverwep?serverTimezone=UTC";
+    String dbID = "root";
+    String dbPW = "1234";
+	
+    String category1 = "인천"; 
+	String category2 = "한식";
+	String query = category1  + category2;
+	String encodedQuery = "";
+	try {
+		encodedQuery = URLEncoder.encode(query, "UTF-8");
+	} catch (UnsupportedEncodingException e) {
+		out.println("검색어 인코딩 실패: " + e.getMessage());
+	}
+	String apiURL = "https://openapi.naver.com/v1/search/local.xml?query=" + encodedQuery
+			+ "&display=10&start=1&sort=random";
+	HttpURLConnection con = null;
+	StringBuilder responseBody = new StringBuilder();
+
+	try {
+		URL url = new URL(apiURL);
+		con = (HttpURLConnection) url.openConnection();
+		con.setRequestMethod("GET");
+		con.setRequestProperty("X-Naver-Client-Id", clientId);
+		con.setRequestProperty("X-Naver-Client-Secret", clientSecret);
+		
+		int responseCode = con.getResponseCode();
+		InputStream is = (responseCode == 200) ? con.getInputStream() : con.getErrorStream();
+		
+		BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+		String line;
+		while ((line = reader.readLine()) != null) {
+			responseBody.append(line).append("\n");
+		}
+		reader.close();
+	} catch (Exception e) {
+	    out.println("오류 발생: " + e.getMessage());
+	    e.printStackTrace(new java.io.PrintWriter(out));
+	} finally {
+		if (con != null)
+			con.disconnect();
+	}
+
+	javax.xml.parsers.DocumentBuilderFactory factory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+    javax.xml.parsers.DocumentBuilder builder = factory.newDocumentBuilder();
+    ByteArrayInputStream xmlStream = new ByteArrayInputStream(responseBody.toString().getBytes("UTF-8"));
+    org.w3c.dom.Document doc = builder.parse(xmlStream);
+
+    org.w3c.dom.NodeList items = doc.getElementsByTagName("item");
+
+    Class.forName("com.mysql.cj.jdbc.Driver");
+    Connection conn = DriverManager.getConnection(dbURL, dbID, dbPW);
+
+    String sql = "INSERT INTO companies "
+                + "(name, category, address, street_address, description, mapx, mapy, url) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+    PreparedStatement pstmt = conn.prepareStatement(sql);
+
+    for (int i = 0; i < items.getLength(); i++) {
+        org.w3c.dom.Element item = (org.w3c.dom.Element) items.item(i);
+
+        String name = item.getElementsByTagName("title").item(0).getTextContent();
+        String category = item.getElementsByTagName("category").item(0).getTextContent();
+        String address = item.getElementsByTagName("address").item(0).getTextContent();
+        String streetAddr = item.getElementsByTagName("roadAddress").item(0).getTextContent();
+        String description = item.getElementsByTagName("description").item(0).getTextContent();
+        String url = item.getElementsByTagName("link").item(0).getTextContent();
+
+        String mapxStr = item.getElementsByTagName("mapx").item(0).getTextContent();
+        String mapyStr = item.getElementsByTagName("mapy").item(0).getTextContent();
+
+        double mapx = 0.0;
+        double mapy = 0.0;
+
+        try {
+            mapx = Double.parseDouble(mapxStr);
+            mapy = Double.parseDouble(mapyStr);
+        } catch (Exception e) {}
+
+        pstmt.setString(1, name);
+        pstmt.setString(2, category);
+        pstmt.setString(3, address);
+        pstmt.setString(4, streetAddr);
+        pstmt.setString(5, description);
+        pstmt.setDouble(6, mapx);
+        pstmt.setDouble(7, mapy);
+        pstmt.setString(8, url);
+
+        pstmt.addBatch();
+
+        out.println("저장됨 → " + name + " / " + category + " / " + ad

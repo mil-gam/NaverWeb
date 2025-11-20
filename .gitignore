@@ -1,0 +1,10 @@
+/target/
+/build/
+/bin/
+/.settings/
+/.classpath
+.project
+*.log
+*.tmp
+*.class
+.DS_Store
