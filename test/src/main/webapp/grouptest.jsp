@@ -10,8 +10,8 @@
 <body>
 	<%
 	//db, api 아이디저장
-	String clientId = "zFWHGw63zV5E5AUyx1Ht";
-	String clientSecret = "xKgyjz23_I";
+	String clientId = "";
+	String clientSecret = "";
 	String dbURL = "jdbc:mysql://localhost:3306/naverwep?serverTimezone=UTC";
     String dbID = "root";
     String dbPW = "1234";
